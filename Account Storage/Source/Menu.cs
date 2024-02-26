@@ -12,7 +12,7 @@
             Items = items;
         }
 
-        private void DisplayMenu()
+        private void DisplayMenu(string escapePrompt)
         {
             for (int i = 0; i < _ScreenHeight; i++)
             {
@@ -27,15 +27,15 @@
                 }
             }
             Console.SetCursorPosition(0, _ScreenHeight + 1);
-            Program.ColorWrite(ConsoleColor.Black, ConsoleColor.DarkCyan, "[▼] Down [▲] Up [ENTER] Choose [ESCAPE] Exit");
+            Utilities.ColorWrite(ConsoleColor.Black, ConsoleColor.DarkCyan, $"[▼] Down [▲] Up [ENTER] Choose [ESCAPE] {escapePrompt}");
         }
 
-        internal int StartMenuLoop()
+        internal int StartMenuLoop(string escapePrompt = "Exit")
         {
             Console.Clear();
             while (true)
             {
-                DisplayMenu();
+                DisplayMenu(escapePrompt);
 
                 switch (Console.ReadKey(true).Key)
                 {
@@ -67,10 +67,10 @@
                             Console.Clear();
                         }
                         break;
-                    case ConsoleKey.Escape:
-                        return -1;
                     case ConsoleKey.Enter:
                         return _Index + (_Page * _ScreenHeight);
+                    case ConsoleKey.Escape:
+                        return -1;
                 }
             }
         }

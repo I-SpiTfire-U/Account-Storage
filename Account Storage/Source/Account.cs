@@ -1,14 +1,14 @@
 ﻿namespace Account_Storage.Source
 {
-    internal class Account
+    public class Account
     {
-        internal string Title;
-        internal string Name;
-        internal string Password;
-        internal string Email;
-        internal string Website;
+        public string Title;
+        public string Name;
+        public string Password;
+        public string Email;
+        public string Website;
 
-        internal Account(string title, string name, string password, string email, string website)
+        public Account(string title, string name, string password, string email, string website)
         {
             Title = title;
             Name = name;
@@ -17,7 +17,7 @@
             Website = website;
         }
 
-        internal Account(string line)
+        public Account(string line)
         {
             string[] parts = line.Split('|');
             Title = parts[0];
@@ -32,9 +32,6 @@
             return $"{Title}|{Name}|{Password}|{Email}|{Website}";
         }
 
-        internal string ToDisplayString()
-        {
-            return $"Title: {Title}\nEmail: {Email}\n Name: {Name}\n Pass: {Password}\n Site: {Website}";
-        }
+        public string GetDisplayString => $"Title: {Title}\n Name: {Name}\n Pass: {Password}\nEmail: {Email}\n Site: {Website}";
     }
 }

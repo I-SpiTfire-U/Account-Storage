@@ -52,8 +52,6 @@
             }
         }
 
-        #region Account Management
-
         private void SelectAccount(List<Account> accounts)
         {
             if (_Accounts.Count == 0)
@@ -140,9 +138,15 @@
         {
             _SearchTerm = Utilities.GetValidString("Search Accounts");
             List<Account> accounts = _Accounts.Where(a => a.Title.Contains(_SearchTerm)).ToList();
-            SelectAccount(accounts);
+            try
+            {
+                SelectAccount(accounts);
+            }
+            catch (Exception)
+            {
+                Utilities.ColorWrite(ConsoleColor.Black, ConsoleColor.DarkRed, $"No available accounts containing '{_SearchTerm}' were found!");
+                _ = Console.ReadKey(true);
+            }
         }
-
-        #endregion
     }
 }

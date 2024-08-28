@@ -1,152 +1,157 @@
 ﻿namespace Account_Storage.Source
 {
-    public class Instance
+    internal class Instance
     {
-        private string? _SearchTerm;
-        private List<Account> _Accounts = [];
-        private const string FILEPATH = "Account_List.txt";
+        private readonly List<Account> SavedAccounts;
+        private const string SavedAccountsPath = "SavedAccounts.txt";
 
-        public Instance()
+        internal Instance()
         {
-            if (!File.Exists(FILEPATH))
+            if (!Path.Exists(SavedAccountsPath))
             {
-                File.WriteAllText(FILEPATH, "");
+                File.WriteAllText(SavedAccountsPath, "");
             }
-            _Accounts.AddRange(AccountIO.ImportAccounts(FILEPATH));
+            SavedAccounts = AccountIO.ImportAccountsFromFile(SavedAccountsPath);
         }
 
-        public void MainMenuLoop()
+        internal void Start()
         {
-            Menu mainMenu = new("Select", "Create", "Search", "Import", "Export");
+            Console.Title = "Account Storage";
+            Console.CursorVisible = false;
+            Console.Clear();
+            MainMenu();
+        }
+
+        private void MainMenu()
+        {
             while (true)
             {
-                _Accounts = [.. _Accounts.OrderBy(a => a.Title)];
-
-                switch (mainMenu.StartMenuLoop())
+                switch (Menus.CreateBasicMenu("Account Storage", ["Save", "List", "Search", "Create", "Import", "Export"]))
                 {
-                    case -1:
-                        return;
                     case 0:
-                        SelectAccount(_Accounts);
+                        AccountIO.ExportAccountsToFile(SavedAccountsPath, SavedAccounts);
                         break;
                     case 1:
-                        Account? account = GetNewAccount();
-                        if (account != null)
-                        {
-                            _Accounts.Add(account);
-                        }
+                        SavedAccountsMenu(null);
                         break;
                     case 2:
-                        SearchAccounts();
+                        SavedAccountsMenu(Utilities.GetValidStringInput("Enter Search Term"));
                         break;
                     case 3:
-                        _Accounts.AddRange(AccountIO.ImportAccounts(Utilities.GetValidString("Enter Import Path")));
-                        _ = Console.ReadKey(true);
+                        Account? newAccount = CreateNewAccount();
+                        if (newAccount != null)
+                        {
+                            SavedAccounts.Add(newAccount);
+                        }
                         break;
                     case 4:
-                        AccountIO.ExportAccounts(Utilities.GetValidString("Enter Export Path"), _Accounts);
-                        _ = Console.ReadKey(true);
+                        string importPath = Utilities.GetValidStringInput("File Path");
+                        if (string.IsNullOrWhiteSpace(importPath) || !Path.Exists(importPath))
+                        {
+                            Utilities.PrintErrorMessage("Invalid import path given.");
+                            break;
+                        }
+                        SavedAccounts.AddRange(AccountIO.ImportAccountsFromFile(importPath));
                         break;
+                    case 5:
+                        string exportPath = Utilities.GetValidStringInput("File Path");
+                        if (string.IsNullOrWhiteSpace(exportPath) || !Path.Exists(exportPath))
+                        {
+                            Utilities.PrintErrorMessage("Invalid export path given.");
+                            break;
+                        }
+                        AccountIO.ExportAccountsToFile(exportPath, SavedAccounts);
+                        break;
+                    case -1:
+                        return;
                 }
-                AccountIO.ExportAccounts(FILEPATH, _Accounts);
             }
         }
 
-        private void SelectAccount(List<Account> accounts)
+        private void SavedAccountsMenu(string? searchTerm)
         {
-            if (_Accounts.Count == 0)
-            {
-                Console.Clear();
-                Utilities.ColorWrite(ConsoleColor.Black, ConsoleColor.DarkRed, "No available accounts to preform actions on!");
-                _ = Console.ReadKey(true);
-                return;
-            }
-
-            Menu optionMenu = new("View", "Edit", "Delete");
-            Menu accountMenu = new(accounts.Select(a => a.Title).ToArray());
-
             while (true)
             {
-                int index = accountMenu.StartMenuLoop("Back");
+                IEnumerable<Account> filteredAccounts = searchTerm != null ? SavedAccounts.Where(a => a.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) : SavedAccounts;
+                List<Account> tempAccounts = [.. filteredAccounts.OrderBy(account => account.Title, StringComparer.OrdinalIgnoreCase)];
 
-                if (index == -1)
+                if (tempAccounts.Count == 0)
+                {
+                    Utilities.PrintErrorMessage($"No accounts found.");
+                    break;
+                }
+
+                Account? selectedAccount = Menus.CreateAccountMenu("List Of Accounts", [.. tempAccounts]);
+                if (selectedAccount == null)
                 {
                     return;
                 }
+                AccountOptionsMenu(selectedAccount);
+            }
+        }
 
-                int optionIndex = optionMenu.StartMenuLoop("Back");
-
-                switch (optionIndex)
+        private void AccountOptionsMenu(Account selectedAccount)
+        {
+            while (true)
+            {
+                switch (Menus.CreateBasicMenu($"Options For: {selectedAccount.Title}", ["View", "Edit", "Delete"]))
                 {
                     case 0:
-                        Console.SetCursorPosition(0, 0);
-                        Console.WriteLine(accounts[index].GetDisplayString);
-                        _ = Console.ReadKey(true);
-                        continue;
+                        selectedAccount.DisplayAccountInformation();
+                        break;
                     case 1:
-                        Account? account = GetNewAccount(index);
-                        if (account != null)
+                        Account? newAccount = CreateNewAccount(selectedAccount);
+                        if (newAccount != null)
                         {
-                            _Accounts[index] = account;
+                            SavedAccounts.Remove(selectedAccount);
+                            SavedAccounts.Add(newAccount);
+                            selectedAccount = newAccount;
                         }
                         break;
                     case 2:
-                        _ = _Accounts.Remove(accounts[index]);
-                        accounts.RemoveAt(index);
-                        break;
+                        SavedAccounts.Remove(selectedAccount);
+                        return;
+                    case -1:
+                        return;
                 }
-                accountMenu.Items = accounts.Select(a => a.Title).ToArray();
             }
         }
 
-        private Account? GetNewAccount(int index = -1)
+        private static Account? CreateNewAccount(Account? existingAccount = null)
         {
-            Account account = index == -1 ? new Account("||||") : _Accounts[index];
-            Menu menu = new("Title", "Name", "Password", "Email", "Website", "Save");
+            Account account = existingAccount != null ? new Account(existingAccount) : new Account();
 
             while (true)
             {
-                switch (menu.StartMenuLoop("Back"))
+                switch (Menus.CreateBasicMenu("Account", [$"Title    : {account.Title}", $"Username : {account.Name}", $"Password : {account.Pass}", $"Email    : {account.Email}", $"Website  : {account.Site}", "Save"]))
                 {
-                    case -1:
-                        return null;
                     case 0:
-                        account.Title = Utilities.GetValidString($"Current Title: {account.Title}");
+                        account.Title = GetNewAccountValue("Title", account.Title);
                         break;
                     case 1:
-                        account.Name = Utilities.GetValidString($"Current Name: {account.Name}");
+                        account.Name = GetNewAccountValue("Username", account.Name);
                         break;
                     case 2:
-                        Console.Clear();
-                        Console.Write("Generate Random Password? Y/N");
-                        account.Password = Console.ReadKey(true).Key == ConsoleKey.Y ? RandomStringGenerator.Generate() : Utilities.GetValidString($"Current Password: {account.Password}");
+                        Console.Write("Generate random password? [y/n]");
+                        account.Pass = Console.ReadKey(true).KeyChar == 'y' ? RandomStringGenerator.Generate() : GetNewAccountValue("Password", account.Pass);
                         break;
                     case 3:
-                        account.Email = Utilities.GetValidString($"Current Email: {account.Email}");
+                        account.Email = GetNewAccountValue("Email", account.Email);
                         break;
                     case 4:
-                        account.Website = Utilities.GetValidString($"Current Website: {account.Website}");
+                        account.Site = GetNewAccountValue("Website", account.Site);
                         break;
                     case 5:
                         return account;
-
+                    case -1:
+                        return null;
                 }
             }
         }
 
-        private void SearchAccounts()
+        private static string GetNewAccountValue(string type, string previousValue)
         {
-            _SearchTerm = Utilities.GetValidString("Search Accounts");
-            List<Account> accounts = _Accounts.Where(a => a.Title.Contains(_SearchTerm)).ToList();
-            try
-            {
-                SelectAccount(accounts);
-            }
-            catch (Exception)
-            {
-                Utilities.ColorWrite(ConsoleColor.Black, ConsoleColor.DarkRed, $"No available accounts containing '{_SearchTerm}' were found!");
-                _ = Console.ReadKey(true);
-            }
+            return Utilities.GetValidStringInput($"{type} [Previous: {previousValue}]");
         }
     }
 }

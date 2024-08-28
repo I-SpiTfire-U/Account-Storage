@@ -1,27 +1,39 @@
-﻿namespace Account_Storage.Source
+namespace Account_Storage.Source
 {
-    public static class AccountIO
+    internal static class AccountIO
     {
-        public static List<Account> ImportAccounts(string path)
+        internal static void ExportAccountsToFile(string path, List<Account> accounts)
         {
-            if (!File.Exists(path))
+            if (accounts.Count == 0)
             {
-                Utilities.ColorWrite(ConsoleColor.Black, ConsoleColor.DarkRed, "Invalid path.");
-                return [];
-            }
-            Utilities.ColorWrite(ConsoleColor.Black, ConsoleColor.Green, "Accounts imported successfully.");
-            return File.ReadLines(path).Select(line => new Account(line)).ToList();
-        }
-
-        public static void ExportAccounts(string path, List<Account> accounts)
-        {
-            if (!path.EndsWith(".txt"))
-            {
-                Utilities.ColorWrite(ConsoleColor.Black, ConsoleColor.DarkRed, "Invalid path.");
+                Utilities.PrintErrorMessage("No accounts to export.");
                 return;
             }
-            Utilities.ColorWrite(ConsoleColor.Black, ConsoleColor.Green, "Accounts exported successfully.");
-            File.WriteAllLines(path, accounts.Select(a => a.ToString()));
+
+            File.WriteAllLines(path, accounts.Select(account => AccountProtection.Encrypt(account.ToString())));
+        }
+
+        internal static List<Account> ImportAccountsFromFile(string path)
+        {
+            List<Account> accounts = [];
+
+            using (StreamReader streamReader = new(path))
+            {
+                string? line;
+
+                while ((line = streamReader.ReadLine()) != null)
+                {
+                    string decryptedLine = AccountProtection.Decrypt(line);
+                    string[] chunks = decryptedLine.Split('|');
+
+                    if (chunks.Length == 5)
+                    {
+                        accounts.Add(new Account(chunks[0], chunks[1], chunks[2], chunks[3], chunks[4]));
+                    }
+                }
+            }
+
+            return accounts;
         }
     }
 }

@@ -1,11 +1,11 @@
 ﻿namespace Account_Storage.Source
 {
-    public class Program
+    internal class Program
     {
-        public static void Main()
+        private static void Main()
         {
-            Instance i = new();
-            i.MainMenuLoop();
+            Instance instance = new();
+            instance.Start();
         }
     }
 }

@@ -1,78 +1,154 @@
-﻿namespace Account_Storage.Source
+﻿using System.Text;
+
+namespace Account_Storage.Source
 {
-    internal class Menu
+    internal static class Menus
     {
-        internal object[] Items;
-        private int _Index;
-        private int _Page;
-        private readonly int _ScreenHeight = Console.WindowHeight - 3;
-
-        internal Menu(params object[] items)
+        internal static int CreateBasicMenu(string title, string[] items)
         {
-            Items = items;
-        }
+            int currentIndex = 0;
+            int currentScrollAmount = 0;
+            int currentIndexPlusScroll = 0;
+            int numberOfItemsToDisplay = Math.Min(items.Length, Console.WindowHeight - 3);
+            ConsoleKey keyInput;
 
-        private void DisplayMenu(string escapePrompt)
-        {
-            for (int i = 0; i < _ScreenHeight; i++)
-            {
-                Console.SetCursorPosition(0, i);
-                Console.WriteLine(Environment.NewLine);
-                Console.SetCursorPosition(0, i);
-                Console.WriteLine(i == _Index ? $"> {Items[i + (_Page * _ScreenHeight)]}" : $"  {Items[i + (_Page * _ScreenHeight)]}");
+            items = AddPaddingToOptions(items);
 
-                if (i + (_Page * _ScreenHeight) >= Items.Length - 1)
-                {
-                    break;
-                }
-            }
-            Console.SetCursorPosition(0, _ScreenHeight + 1);
-            Utilities.ColorWrite(ConsoleColor.Black, ConsoleColor.DarkCyan, $"[▼] Down [▲] Up [ENTER] Choose [ESCAPE] {escapePrompt}");
-        }
-
-        internal int StartMenuLoop(string escapePrompt = "Exit")
-        {
             Console.Clear();
+            DisplayMenu(title, items, currentIndex, currentScrollAmount, numberOfItemsToDisplay);
+
             while (true)
             {
-                DisplayMenu(escapePrompt);
+                keyInput = Console.ReadKey(true).Key;
 
-                switch (Console.ReadKey(true).Key)
+                if (keyInput == ConsoleKey.A)
                 {
-                    case ConsoleKey.UpArrow:
-                        if (_Index == 0 && _Page == 0)
-                        {
-                            continue;
-                        }
-                        _Index--;
-
-                        if (_Index == -1)
-                        {
-                            _Index = _ScreenHeight - 1;
-                            _Page--;
-                            Console.Clear();
-                        }
-                        break;
-                    case ConsoleKey.DownArrow:
-                        if (_Index + (_Page * _ScreenHeight) == Items.Length - 1)
-                        {
-                            continue;
-                        }
-                        _Index++;
-
-                        if (_Index == _ScreenHeight && _Index < Items.Length - 1)
-                        {
-                            _Index = 0;
-                            _Page++;
-                            Console.Clear();
-                        }
-                        break;
-                    case ConsoleKey.Enter:
-                        return _Index + (_Page * _ScreenHeight);
-                    case ConsoleKey.Escape:
-                        return -1;
+                    Console.Clear();
+                    return currentIndexPlusScroll;
                 }
+                else if (keyInput == ConsoleKey.Z)
+                {
+                    Console.Clear();
+                    return -1;
+                }
+                else if (keyInput == ConsoleKey.W && currentIndexPlusScroll > 0)
+                {
+                    if (currentIndex <= 0 && currentScrollAmount > 0)
+                    {
+                        currentScrollAmount--;
+                    }
+                    else if (currentIndex > 0)
+                    {
+                        currentIndex--;
+                    }
+                }
+                else if (keyInput == ConsoleKey.D && currentIndexPlusScroll < items.Length)
+                {
+                    if (currentIndex == numberOfItemsToDisplay - 1 && currentIndexPlusScroll < items.Length - 1)
+                    {
+                        currentScrollAmount++;
+                    }
+                    else if (currentIndex < numberOfItemsToDisplay - 1)
+                    {
+                        currentIndex++;
+                    }
+                }
+                else
+                {
+                    continue;
+                }
+
+                currentIndexPlusScroll = currentIndex + currentScrollAmount;
+                DisplayMenu(title, items, currentIndex, currentScrollAmount, numberOfItemsToDisplay);
             }
+        }
+
+        internal static Account? CreateAccountMenu(string title, Account[] items)
+        {
+            string[] itemStrings = items.Select(account => account.Title).ToArray();
+            int currentIndex = 0;
+            int currentScrollAmount = 0;
+            int currentIndexPlusScroll = 0;
+            int numberOfItemsToDisplay = Math.Min(items.Length, Console.WindowHeight - 3);
+            ConsoleKey keyInput;
+
+            itemStrings = AddPaddingToOptions(itemStrings);
+
+            Console.Clear();
+            DisplayMenu(title, itemStrings, currentIndex, currentScrollAmount, numberOfItemsToDisplay);
+
+            while (true)
+            {
+                keyInput = Console.ReadKey(true).Key;
+
+                if (keyInput == ConsoleKey.A)
+                {
+                    Console.Clear();
+                    return items[currentIndexPlusScroll];
+                }
+                else if (keyInput == ConsoleKey.Z)
+                {
+                    Console.Clear();
+                    return null;
+                }
+                else if (keyInput == ConsoleKey.W && currentIndexPlusScroll > 0)
+                {
+                    if (currentIndex <= 0 && currentScrollAmount > 0)
+                    {
+                        currentScrollAmount--;
+                    }
+                    else if (currentIndex > 0)
+                    {
+                        currentIndex--;
+                    }
+                }
+                else if (keyInput == ConsoleKey.D && currentIndexPlusScroll < items.Length)
+                {
+                    if (currentIndex == numberOfItemsToDisplay - 1 && currentIndexPlusScroll < items.Length - 1)
+                    {
+                        currentScrollAmount++;
+                    }
+                    else if (currentIndex < numberOfItemsToDisplay - 1)
+                    {
+                        currentIndex++;
+                    }
+                }
+                else
+                {
+                    continue;
+                }
+
+                currentIndexPlusScroll = currentIndex + currentScrollAmount;
+                DisplayMenu(title, itemStrings, currentIndex, currentScrollAmount, numberOfItemsToDisplay);
+            }
+        }
+
+        private static void DisplayMenu(string title, string[] items, int currentIndex, int currentScrollAmount, int numberOfItemsToDisplay)
+        {
+            StringBuilder menu = new();
+            string currentOption;
+            
+            for (int i = 0; i < numberOfItemsToDisplay; i++)
+            {
+                currentOption = items[i + currentScrollAmount];
+                menu.AppendLine(i == currentIndex ? $"> {currentOption}" : $"  {currentOption}");
+            }
+
+            Console.SetCursorPosition(0, 0);
+            Utilities.ColorWrite((title, true, ConsoleColor.Green, null));
+            Console.Write(menu.ToString());
+
+            Console.SetCursorPosition(0, Console.WindowHeight - 1);
+            Utilities.ColorWrite(("[W] Up [D] Down [A] Select [Z] Back/Exit", false, ConsoleColor.Black, ConsoleColor.Blue));
+        }
+
+        private static string[] AddPaddingToOptions(string[] items)
+        {
+            for (int i = 0; i < items.Length; i++)
+            {
+                items[i] = items[i].PadRight(Console.WindowWidth - 2);
+            }
+            return items;
         }
     }
 }

@@ -1,26 +1,58 @@
 ﻿namespace Account_Storage.Source
 {
-    public static class Utilities
+    internal static class Utilities
     {
-        public static void ColorWrite(ConsoleColor foreground, ConsoleColor background, object? value)
+        internal static void ColorWrite(params (string? value, bool addNewline, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)[] lines)
         {
-            Console.ForegroundColor = foreground;
-            Console.BackgroundColor = background;
-            Console.Write(value);
-            Console.ResetColor();
+            ConsoleColor originalForegroundColor = Console.ForegroundColor;
+            ConsoleColor originalBackgroundColor = Console.BackgroundColor;
+
+            foreach (var (value, addNewline, foregroundColor, backgroundColor) in lines)
+            {
+                if (foregroundColor.HasValue)
+                {
+                    Console.ForegroundColor = foregroundColor.Value;
+                }
+                if (backgroundColor.HasValue)
+                {
+                    Console.BackgroundColor = backgroundColor.Value;
+                }
+
+                if (addNewline)
+                {
+                    Console.WriteLine(value);
+                }
+                else
+                {
+                    Console.Write(value);
+                }
+
+                Console.ForegroundColor = originalForegroundColor;
+                Console.BackgroundColor = originalBackgroundColor;
+            }
         }
 
-        public static string GetValidString(string? prompt)
+        internal static string GetValidStringInput(string prompt)
         {
-            Console.Clear();
-            Console.Write($"{prompt}\n");
+            string? result;
+
+            Console.CursorVisible = true;
+            Console.WriteLine(prompt);
             do
             {
-                Console.Write("> ");
-                prompt = Console.ReadLine();
+                ColorWrite(("> ", false, ConsoleColor.Cyan, null));
+                result = Console.ReadLine();
             }
-            while (string.IsNullOrWhiteSpace(prompt));
-            return prompt;
+            while (string.IsNullOrEmpty(result));
+            Console.CursorVisible = false;
+            return result;
+        }
+
+        internal static void PrintErrorMessage(string? message)
+        {
+            ColorWrite((message, false, ConsoleColor.Black, ConsoleColor.Red));
+            Console.ReadKey(true);
+            Console.Clear();
         }
     }
 }

@@ -2,7 +2,7 @@
 # Account Storage
 Account Storage is a small command-line tool for storing account information.
 
-![image](https://github.com/user-attachments/assets/08319ba4-406d-48dc-8fe7-6e6b7a2355ea)
+![image](https://github.com/user-attachments/assets/bb9f406d-3193-423e-b5cc-9ff4975265f6)
 
 # Features
 - Save, edit, and remove account information such as: usernames, passwords, emails, and websites.

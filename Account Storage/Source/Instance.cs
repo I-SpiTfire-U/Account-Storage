@@ -2,15 +2,24 @@
 {
     internal class Instance
     {
+        private string SavedAccountsPath;
+        private readonly string ConfigFilePath;
         private readonly List<Account> SavedAccounts;
-        private const string SavedAccountsPath = "SavedAccounts.txt";
 
         internal Instance()
         {
+            ConfigFilePath = $"{Environment.CurrentDirectory}/.config";
+            if (!Path.Exists(ConfigFilePath))
+            {
+                File.WriteAllText(ConfigFilePath, AccountProtection.Encrypt($"{Environment.CurrentDirectory}/.accntstrg"));
+            }
+
+            SavedAccountsPath = AccountProtection.Decrypt(File.ReadAllLines(ConfigFilePath)[0]);
             if (!Path.Exists(SavedAccountsPath))
             {
                 File.WriteAllText(SavedAccountsPath, "");
             }
+
             SavedAccounts = AccountIO.ImportAccountsFromFile(SavedAccountsPath);
         }
 
@@ -26,7 +35,7 @@
         {
             while (true)
             {
-                switch (Menus.CreateBasicMenu("Account Storage", ["Save", "List", "Search", "Create", "Import", "Export"]))
+                switch (Menus.CreateBasicMenu("Account Storage", ["Save", "List", "Search", "Create", "Import", "Export", "Path"]))
                 {
                     case 0:
                         AccountIO.ExportAccountsToFile(SavedAccountsPath, SavedAccounts);
@@ -61,6 +70,18 @@
                             break;
                         }
                         AccountIO.ExportAccountsToFile(exportPath, SavedAccounts);
+                        break;
+                    case 6:
+                        string newPath = Utilities.GetValidStringInput("New Path");
+                        if (string.IsNullOrWhiteSpace(newPath) || !Path.Exists(newPath))
+                        {
+                            Utilities.PrintErrorMessage("Invalid path given.");
+                            break;
+                        }
+                        File.Delete(SavedAccountsPath);
+                        SavedAccountsPath = $"{newPath}/.accntstrg";
+                        File.WriteAllText(ConfigFilePath, AccountProtection.Encrypt(SavedAccountsPath));
+                        AccountIO.ExportAccountsToFile(SavedAccountsPath, SavedAccounts);
                         break;
                     case -1:
                         return;

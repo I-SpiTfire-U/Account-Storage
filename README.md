@@ -11,8 +11,11 @@ Account Storage is a small command-line tool for storing account information.
 
 # Controls
 'W' Scroll up through menu
+
 'D' Scroll down through menu
+
 'A' Select highlighted option
+
 'Z' Go back or exit program on main menu
 
 # Build

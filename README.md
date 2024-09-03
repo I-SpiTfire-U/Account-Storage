@@ -1,16 +1,17 @@
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 # Account Storage
 Account Storage is a small command-line tool for storing account information.
+It is written in the C# programming language.
 
 ![image](https://github.com/user-attachments/assets/bb9f406d-3193-423e-b5cc-9ff4975265f6)
 
-# Features
-- Save, edit, and remove account information such as: usernames, passwords, emails, and websites.
-- Export your account list to a specified location
-- Import accounts from an exported file
-- List and search for accounts using search terms.
+# Features:
+- 📝 Save, edit, and remove account information such as: usernames, passwords, emails, and websites.
+- 📁 Export your account list to a specified location
+- 📥 Import accounts from an exported file
+- 🗃️ List and search for accounts using search terms.
 
-# Controls
+# Controls:
 'W' Scroll up through menu
 
 'D' Scroll down through menu

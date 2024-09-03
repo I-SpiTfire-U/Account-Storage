@@ -7,9 +7,9 @@ It is written in the C# programming language.
 
 # Features:
 - 📝 Save, edit, and remove account information such as: usernames, passwords, emails, and websites.
-- 📁 Export your account list to a specified location
+- 🗃️ Export your account list to a specified location
 - 📥 Import accounts from an exported file
-- 🗃️ List and search for accounts using search terms.
+- 🔎 List and search for accounts using search terms.
 
 # Controls:
 'W' Scroll up through menu

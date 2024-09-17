@@ -10,28 +10,27 @@ namespace Account_Storage.Source
             int currentScrollAmount = 0;
             int currentIndexPlusScroll = 0;
             int numberOfItemsToDisplay = Math.Min(items.Length, Console.WindowHeight - 3);
-            ConsoleKey keyInput;
+            char charInput;
 
             items = AddPaddingToOptions(items);
 
             Console.Clear();
-            DisplayMenu(title, items, currentIndex, currentScrollAmount, numberOfItemsToDisplay);
-
             while (true)
             {
-                keyInput = Console.ReadKey(true).Key;
+                DisplayMenu(title, items, currentIndex, currentScrollAmount, numberOfItemsToDisplay, false);
+                charInput = Console.ReadKey(true).KeyChar;
 
-                if (keyInput == ConsoleKey.A)
+                if (charInput == 'a')
                 {
                     Console.Clear();
                     return currentIndexPlusScroll;
                 }
-                else if (keyInput == ConsoleKey.Z)
+                else if (charInput == 'z')
                 {
                     Console.Clear();
                     return -1;
                 }
-                else if (keyInput == ConsoleKey.W && currentIndexPlusScroll > 0)
+                else if (charInput == 'w' && currentIndexPlusScroll > 0)
                 {
                     if (currentIndex <= 0 && currentScrollAmount > 0)
                     {
@@ -42,7 +41,7 @@ namespace Account_Storage.Source
                         currentIndex--;
                     }
                 }
-                else if (keyInput == ConsoleKey.D && currentIndexPlusScroll < items.Length)
+                else if (charInput == 'd' && currentIndexPlusScroll < items.Length)
                 {
                     if (currentIndex == numberOfItemsToDisplay - 1 && currentIndexPlusScroll < items.Length - 1)
                     {
@@ -59,7 +58,6 @@ namespace Account_Storage.Source
                 }
 
                 currentIndexPlusScroll = currentIndex + currentScrollAmount;
-                DisplayMenu(title, items, currentIndex, currentScrollAmount, numberOfItemsToDisplay);
             }
         }
 
@@ -70,28 +68,27 @@ namespace Account_Storage.Source
             int currentScrollAmount = 0;
             int currentIndexPlusScroll = 0;
             int numberOfItemsToDisplay = Math.Min(items.Length, Console.WindowHeight - 3);
-            ConsoleKey keyInput;
+            char charInput;
 
             itemStrings = AddPaddingToOptions(itemStrings);
 
             Console.Clear();
-            DisplayMenu(title, itemStrings, currentIndex, currentScrollAmount, numberOfItemsToDisplay);
-
             while (true)
             {
-                keyInput = Console.ReadKey(true).Key;
+                DisplayMenu(title, itemStrings, currentIndex, currentScrollAmount, numberOfItemsToDisplay, true);
+                charInput = Console.ReadKey(true).KeyChar;
 
-                if (keyInput == ConsoleKey.A)
+                if (charInput == 'a')
                 {
                     Console.Clear();
                     return items[currentIndexPlusScroll];
                 }
-                else if (keyInput == ConsoleKey.Z)
+                else if (charInput == 'z')
                 {
                     Console.Clear();
                     return null;
                 }
-                else if (keyInput == ConsoleKey.W && currentIndexPlusScroll > 0)
+                else if (charInput == 'w' && currentIndexPlusScroll > 0)
                 {
                     if (currentIndex <= 0 && currentScrollAmount > 0)
                     {
@@ -102,7 +99,7 @@ namespace Account_Storage.Source
                         currentIndex--;
                     }
                 }
-                else if (keyInput == ConsoleKey.D && currentIndexPlusScroll < items.Length)
+                else if (charInput == 'd' && currentIndexPlusScroll < items.Length)
                 {
                     if (currentIndex == numberOfItemsToDisplay - 1 && currentIndexPlusScroll < items.Length - 1)
                     {
@@ -119,11 +116,10 @@ namespace Account_Storage.Source
                 }
 
                 currentIndexPlusScroll = currentIndex + currentScrollAmount;
-                DisplayMenu(title, itemStrings, currentIndex, currentScrollAmount, numberOfItemsToDisplay);
             }
         }
 
-        private static void DisplayMenu(string title, string[] items, int currentIndex, int currentScrollAmount, int numberOfItemsToDisplay)
+        private static void DisplayMenu(string title, string[] items, int currentIndex, int currentScrollAmount, int numberOfItemsToDisplay, bool displayNumberOfItems)
         {
             StringBuilder menu = new();
             string currentOption;
@@ -139,7 +135,12 @@ namespace Account_Storage.Source
             Console.Write(menu.ToString());
 
             Console.SetCursorPosition(0, Console.WindowHeight - 1);
-            Utilities.ColorWrite(("[W] Up [D] Down [A] Select [Z] Back/Exit", false, ConsoleColor.Black, ConsoleColor.Blue));
+            if (displayNumberOfItems)
+            {
+                Utilities.ColorWrite(($"[w] UP [d] DOWN [a] SELECT [z] BACK/EXIT <{items.Length} ACCOUNTS>", false, ConsoleColor.Black, ConsoleColor.Blue));
+                return;
+            }
+            Utilities.ColorWrite(("[w] UP [d] DOWN [a] SELECT [z] BACK/EXIT", false, ConsoleColor.Black, ConsoleColor.Blue));
         }
 
         private static string[] AddPaddingToOptions(string[] items)

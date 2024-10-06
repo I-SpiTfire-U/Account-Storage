@@ -10,6 +10,7 @@ It is written in the C# programming language.
 - 🗃️ Export your account list to a specified location
 - 📥 Import accounts from an exported file
 - 🔎 List and search for accounts using search terms.
+- 🔒 A really bad encryption system that will probably be removed or reworked at some point. (It's only there still because it's funny)
 
 # Controls:
 'W' Scroll up through menu

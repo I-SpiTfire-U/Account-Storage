@@ -1,4 +1,15 @@
-﻿using Account_Storage.Accounts;
+﻿//
+// Just a quick note:
+// -----------------------------------------------------------------------------------------------
+// This file is a massive mess right now and I plan on going through and updating it eventually. 
+// If you were planning on going through the source code of this project, consider this a warning.
+// -----------------------------------------------------------------------------------------------
+//
+// Have fun! :3
+//
+
+using System.Security.Cryptography;
+using Account_Storage.Accounts;
 using Account_Storage.Menus;
 using Account_Storage.Utilities;
 using Account_Storage.Utilities.Input;
@@ -6,17 +17,34 @@ using Account_Storage.Utilities.Input;
 namespace Account_Storage;
 internal static class AccountStorage
 {
-    private static string ConfigFilePath = GetConfigPath();
-    private static string SavedAccountsPath = GetSavedAccountsPath();
-    private static readonly List<Account> SavedAccounts = AccountIO.ImportAccountsFromFile(SavedAccountsPath);
+    private static bool IsFirstLogin = false;
+    private static string SavedAccountsPath;
+    private static readonly string ConfigFilePath;
+    private static readonly byte[] EncryptionKey;
+    private static readonly byte[] EncryptionIV;
+    private static readonly List<Account> SavedAccounts;
+
+    static AccountStorage()
+    {
+        InitializeConsole();
+        
+        ConfigFilePath = GetConfigPath();
+        (EncryptionKey, EncryptionIV) = IsFirstLogin ? GetNewKeyAndIV() : GetUserKeyAndIV();
+        SavedAccountsPath = GetSavedAccountsPath();
+        SavedAccounts = AccountIO.ImportAccountsFromFile(EncryptionKey, EncryptionIV, SavedAccountsPath);
+    }
 
     internal static void Start()
     {
-        Console.Title = "Account Storage";
-        Console.CursorVisible = false;
-
         Console.Clear();
         MainMenu();
+    }
+
+    private static void InitializeConsole()
+    {
+        Console.Title = "Account Storage";
+        Console.CursorVisible = false;
+        Console.Clear();
     }
 
     private static string GetConfigPath()
@@ -25,8 +53,9 @@ internal static class AccountStorage
 
         if (!File.Exists(path))
         {
-            string encryptedAccountPath = AccountProtection.EncryptString(Path.Combine(Environment.CurrentDirectory, ".accntstrg"));
-            File.WriteAllText(path, encryptedAccountPath);
+            string accountsPath = Path.Combine(Environment.CurrentDirectory, ".accntstrg");
+            File.WriteAllText(path, accountsPath);
+            IsFirstLogin = true;
         }
 
         return path;
@@ -34,27 +63,75 @@ internal static class AccountStorage
 
     private static string GetSavedAccountsPath()
     {
-        string path = AccountProtection.DecryptString(File.ReadAllText(ConfigFilePath));
+        string path = File.ReadAllText(ConfigFilePath);
 
         if (!File.Exists(path))
         {
-            File.WriteAllText(path, "");
+            using (File.Create(path)) {}
+            AccountEncryption.EncryptFile(EncryptionKey, EncryptionIV, path);
         }
 
         return path;
+    }
+
+    private static (byte[] key, byte[] iv) GetNewKeyAndIV()
+    {
+        using Aes aes = Aes.Create();
+        aes.GenerateKey();
+        aes.GenerateIV();
+
+        byte[] key = aes.Key;
+        byte[] iv = aes.IV;
+
+        OtherUtilities.ColorWrite(("SAVE YOUR KEY AND IV IN A SAFE SPOT!\nYOU WILL NEED THEM TO DECRYPT YOUR ACCOUNTS.\n", true, ConsoleColor.Red, null));
+        Console.WriteLine($"KEY={Convert.ToHexString(key)}\n IV={Convert.ToHexString(iv)}");
+        
+        PromptForConfirmation();
+
+        return (key, iv);
+    }
+
+    private static void PromptForConfirmation()
+    {
+        OtherUtilities.ColorWrite(("\nTYPE YES ONCE YOU HAVE SAVED YOUR KEY AND IV IN A SAFE SPOT!", true, ConsoleColor.Red, null));
+        while (true)
+        {
+            Console.Write("> ");
+            string? input = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(input) && input.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
+            {
+                break;
+            }
+        }
+    }
+
+    private static (byte[] key, byte[] iv) GetUserKeyAndIV()
+    {
+        Console.WriteLine("Login\n---------------");
+
+        byte[] key = Convert.FromHexString(UserInput.GetStringInput("Encryption Key"));
+        byte[] iv = Convert.FromHexString(UserInput.GetStringInput("\nEncryption IV"));
+
+        if (!AccountEncryption.AreKeyAndIVCorrect(SavedAccountsPath, key, iv))
+        {
+            OtherUtilities.PrintErrorMessage("Invalid key or iv entered.");
+            Environment.Exit(0);
+        }
+
+        return (key, iv);
     }
 
     private static void MainMenu()
     {
         while (true)
         {
-            string[] menuItems = [ "Save", "List", "Search", "Create", "Import", "Export", "Path" ];
+            string[] menuItems = [ "Save", "List", "Search", "Create", "Import Encrypted", "Import Plaintext", "Export", "Change Path" ];
             int selectedItem = ScrollingMenu.CreateMenu("Account Storage", menuItems);
 
             switch (selectedItem)
             {
                 case 0:
-                    AccountIO.ExportAccountsToFile(SavedAccounts, SavedAccountsPath);
+                    AccountIO.ExportAccountsToFile(SavedAccounts, EncryptionKey, EncryptionIV, SavedAccountsPath);
                     break;
 
                 case 1:
@@ -74,14 +151,18 @@ internal static class AccountStorage
                     break;
 
                 case 4:
-                    SavedAccounts.AddRange(AccountIO.ImportAccountsFromFile());
+                    SavedAccounts.AddRange(AccountIO.ImportAccountsFromFile(EncryptionKey, EncryptionIV));
                     break;
 
                 case 5:
-                    AccountIO.ExportAccountsToFile(SavedAccounts);
+                    SavedAccounts.AddRange(AccountIO.ImportUnencryptedAccountsFromFile());
                     break;
 
                 case 6:
+                    AccountIO.ExportAccountsToFile(SavedAccounts, EncryptionKey, EncryptionIV);
+                    break;
+
+                case 7:
                     UpdateAccountsPath();
                     break;
 
@@ -105,7 +186,7 @@ internal static class AccountStorage
         File.Move(SavedAccountsPath, newSavedAccountsPath);
 
         SavedAccountsPath = newSavedAccountsPath;
-        File.WriteAllText(ConfigFilePath, AccountProtection.EncryptString(SavedAccountsPath));
+        File.WriteAllText(ConfigFilePath, SavedAccountsPath);
     }
 
     private static void SavedAccountsMenu(string? searchTerm = null)
@@ -205,15 +286,15 @@ internal static class AccountStorage
 
     private static string[] GetAccountMenuOptions(Account account)
     {
-        return new[]
-        {
+        return
+        [
             $"Title : {account.Title}",
             $"Name  : {account.Name}",
             $"Pass  : {account.Pass}",
             $"Email : {account.Email}",
             $"Site  : {account.Site}",
             "Save"
-        };
+        ];
     }
 
     private static string GetPassword(string previousPassword)

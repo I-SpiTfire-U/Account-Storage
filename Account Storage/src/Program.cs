@@ -1,10 +1,8 @@
-﻿namespace Account_Storage
+﻿namespace Account_Storage;
+internal class Program
 {
-    internal class Program
+    private static void Main()
     {
-        private static void Main()
-        {
-            AccountStorage.Start();
-        }
+        AccountStorage.Start();
     }
 }

@@ -4,15 +4,9 @@ using Account_Storage.Utilities.Input;
 namespace Account_Storage.Accounts;
 internal static class AccountIO
 {
-    internal static void ExportAccountsToFile(List<Account> accounts, string? path = null)
+    internal static void ExportAccountsToFile(List<Account> accounts, byte[] key, byte[] iv, string? path = null)
     {
-        string exportPath = path == null ? UserInput.GetStringInput("Export Path") : path;
-
-        if (!OtherUtilities.CheckIfPathIsValid(exportPath))
-        {
-            OtherUtilities.PrintErrorMessage("Invalid export path entered.");
-            return;
-        }
+        string exportPath = path ?? UserInput.GetStringInput("Export Path");
 
         if (accounts.Count == 0)
         {
@@ -20,12 +14,51 @@ internal static class AccountIO
             return;
         }
 
-        File.WriteAllLines(exportPath, accounts.Select(account => AccountProtection.EncryptString(account.ToString())));
+        File.WriteAllLines(exportPath, accounts.Select(account => account.ToString()));
+        AccountEncryption.EncryptFile(key, iv, exportPath);
     }
 
-    internal static List<Account> ImportAccountsFromFile(string? path = null)
+    internal static List<Account> ImportAccountsFromFile(byte[] key, byte[] iv, string? path = null)
     {
-        string importPath = path == null ? UserInput.GetStringInput("File Path") : path;
+        string importPath = path ?? UserInput.GetStringInput("Import Path");
+
+        if (!OtherUtilities.CheckIfPathIsValid(importPath))
+        {
+            OtherUtilities.PrintErrorMessage("Invalid import path entered.");
+            return [];
+        }
+
+        List<Account> accounts = [];
+
+        try
+        {
+            AccountEncryption.DecryptFile(key, iv, importPath);
+        }
+        catch
+        {
+            OtherUtilities.PrintErrorMessage("Decryption failed. Invalid key or IV");
+            return [];
+        }
+
+        using (StreamReader streamReader = new(importPath))
+        {
+            string? line;
+            while ((line = streamReader.ReadLine()) != null)
+            {
+                string[] chunks = line.Split('|');
+                if (chunks.Length == 5)
+                {
+                    accounts.Add(new Account(chunks[0], chunks[1], chunks[2], chunks[3], chunks[4]));
+                }
+            }
+        }
+        AccountEncryption.EncryptFile(key, iv, importPath);
+        return accounts;
+    }
+
+    internal static List<Account> ImportUnencryptedAccountsFromFile(string? path = null)
+    {
+        string importPath = path ?? UserInput.GetStringInput("Import Path");
 
         if (!OtherUtilities.CheckIfPathIsValid(importPath))
         {
@@ -40,8 +73,7 @@ internal static class AccountIO
             string? line;
             while ((line = streamReader.ReadLine()) != null)
             {
-                string decryptedLine = AccountProtection.DecryptString(line);
-                string[] chunks = decryptedLine.Split('|');
+                string[] chunks = line.Split('|');
                 if (chunks.Length == 5)
                 {
                     accounts.Add(new Account(chunks[0], chunks[1], chunks[2], chunks[3], chunks[4]));

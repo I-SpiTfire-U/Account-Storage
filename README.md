@@ -3,14 +3,15 @@
 Account Storage is a small command-line tool for storing account information.
 It is written in the C# programming language.
 
-![image](https://github.com/user-attachments/assets/bb9f406d-3193-423e-b5cc-9ff4975265f6)
+![image](https://github.com/user-attachments/assets/a76ca58d-e60e-499f-922f-b93cb2922760)
 
 # Features:
+- 💬 A simple and easy to navigate console interface.
 - 📝 Save, edit, and remove account information such as: usernames, passwords, emails, and websites.
-- 🗃️ Export your account list to a specified location
-- 📥 Import accounts from an exported file
-- 🔎 List and search for accounts using search terms.
-- 🔒 A really bad encryption system that will probably be removed or reworked at some point. (It's only there still because it's funny)
+- 🗃️ Encrypt and export your accounts to a desired location.
+- 📥 Import accounts encrypted with the same key that the user has, or plaintext accounts.
+- 🔎 List all accounts, or enter a search term to search for specific ones.
+- 🔒 An encryption system that gives the user a randomly generated key upon first usage which is used to decrypt accounts!
 
 # Controls:
 'W' Scroll up through menu

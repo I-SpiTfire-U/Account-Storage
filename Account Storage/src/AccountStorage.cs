@@ -230,7 +230,8 @@ internal static class AccountStorage
                     Account? updatedAccount = CreateNewAccount(selectedAccount);
                     if (updatedAccount != null)
                     {
-                        UpdateAccountList(selectedAccount, updatedAccount);
+                        SavedAccounts.Remove(selectedAccount);
+                        SavedAccounts.Add(updatedAccount);
                         selectedAccount = updatedAccount;
                     }
                     break;
@@ -243,12 +244,6 @@ internal static class AccountStorage
                     return;
             }
         }
-    }
-
-    private static void UpdateAccountList(Account newAccount, Account oldAccount)
-    {
-        SavedAccounts.Remove(oldAccount);
-        SavedAccounts.Add(newAccount);
     }
 
     private static Account? CreateNewAccount(Account? existingAccount = null)

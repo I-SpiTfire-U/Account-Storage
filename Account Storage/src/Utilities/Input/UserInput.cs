@@ -11,6 +11,7 @@ internal static class UserInput
             OtherUtilities.ColorWrite(("> ", false, ConsoleColor.Cyan, null));
 
             string? result = Console.ReadLine();
+            
             if (!string.IsNullOrEmpty(result))
             {
                 Console.CursorVisible = false;
@@ -28,7 +29,9 @@ internal static class UserInput
         {
             OtherUtilities.ColorWrite(("> ", false, ConsoleColor.Cyan, null));
 
-            if (int.TryParse(Console.ReadLine(), out int result))
+            string? input = Console.ReadLine();
+
+            if (int.TryParse(input, out int result))
             {
                 Console.CursorVisible = false;
                 return result;

@@ -27,8 +27,14 @@ internal static class OtherUtilities
                 Console.Write(value);
             }
 
-            Console.ForegroundColor = originalForegroundColor;
-            Console.BackgroundColor = originalBackgroundColor;
+            if (foregroundColor.HasValue)
+            {
+                Console.ForegroundColor = originalForegroundColor;
+            }
+            if (backgroundColor.HasValue)
+            {
+                Console.BackgroundColor = originalBackgroundColor;
+            }
         }
     }
 

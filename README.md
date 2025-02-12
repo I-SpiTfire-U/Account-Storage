@@ -1,3 +1,5 @@
+## <ins>Complete rework of the entire codebase in progress. Prepare for a big update soon! :3</ins>
+
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 # Account Storage
 Account Storage is a small command-line tool for storing account information.
